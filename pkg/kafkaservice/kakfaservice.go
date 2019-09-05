@@ -51,11 +51,10 @@ func (k *KafkaService) Consumer() error {
 	for {
 		msg, err := c.ReadMessage(-1)
 		if err == nil {
-			log.Infof("Message on %s: %s\n", msg.TopicPartition, string(msg.Value))
+			log.Infof("TopicPartition: %s \n", msg.TopicPartition)
 			if err := Store(msg.Value, k.storeUrl); err != nil {
 				log.Infof("store error：%v", err.Error())
 			}
-			c.Commit()
 		} else {
 			// The client will automatically try to recover from all errors.
 			log.Infof("Consumer error: %v (%v)\n", err, msg)
