@@ -47,7 +47,9 @@ func (k *KafkaService) Consumer() error {
 		return err
 	}
 	defer c.Close()
-	c.Subscribe("metrics", nil)
+	if err = c.Subscribe("metrics", nil); err != nil {
+		return err
+	}
 	for {
 		msg, err := c.ReadMessage(-1)
 		if err == nil {
@@ -85,7 +87,7 @@ func (k *KafkaService) Producer() error {
 	// Produce messages to topic (asynchronously)
 	topic := "myTopic"
 	for _, word := range []string{"Welcome", "to", "the", "Confluent", "Kafka", "Golang", "client"} {
-		p.Produce(&kafka.Message{
+		_ = p.Produce(&kafka.Message{
 			TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
 			Value:          []byte(word),
 		}, nil)
@@ -126,8 +128,8 @@ func Store(req []byte, url string) error {
 		return err
 	}
 	defer func() {
-		io.Copy(ioutil.Discard, httpResp.Body)
-		httpResp.Body.Close()
+		_, _ = io.Copy(ioutil.Discard, httpResp.Body)
+		_ = httpResp.Body.Close()
 	}()
 
 	if httpResp.StatusCode/100 != 2 {
