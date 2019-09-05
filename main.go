@@ -1,31 +1,36 @@
 package main
 
 import (
+	"flag"
 	"github.com/mqiqe/prometheus-kafka-m3db/pkg/kafkaservice"
 	log "github.com/sirupsen/logrus"
 	"os"
 	"time"
 )
 
+var (
+	servers         = "localhost"
+	groupId         = "metrics"
+	autoOffsetReset = "earliest"
+	storeUrl        = "http://10.254.192.2:7201/api/v1/prom/remote/write"
+)
+
 func init() {
-	// Log as JSON instead of the default ASCII formatter.
-	//log.SetFormatter(&log.JSONFormatter{})
-
-	// Output to stdout instead of the default stderr
-	// Can be any io.Writer, see below for File example
 	log.SetOutput(os.Stdout)
-
-	// Only log the warning severity or above.
 	log.SetLevel(log.InfoLevel)
+
+	flag.StringVar(&servers, "servers", "127.0.0.1", "Kafka Address")
+	flag.StringVar(&groupId, "group-id", "metrics", "Kafka Group Id")
+	flag.StringVar(&autoOffsetReset, "auto-offset-reset", "earliest", "kafka Auto Offset Reset")
+	flag.StringVar(&storeUrl, "store-url", "http://127.0.0.1:7201/api/v1/prom/remote/write", "M3db Store Url")
+	flag.Parse()
 }
 func main() {
 	// 接收信息
 	log.Infof("start : %v", time.Now())
-	storeUrl := "http://10.254.192.2:7201/api/v1/prom/remote/write"
-	ks := kafkaservice.NewKafkaService("localhost", "metrics", "earliest", storeUrl)
-	for i := 0; i < 21; i++ {
-		go ks.Consumer()
-	}
+
+	ks := kafkaservice.NewKafkaService(servers, groupId, autoOffsetReset, storeUrl)
 	ks.Consumer()
+
 	log.Info("start....")
 }
